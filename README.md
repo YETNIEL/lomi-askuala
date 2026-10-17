@@ -15,8 +15,8 @@ inventing an answer.
 
 | Step | What happens |
 | --- | --- |
-| Upload (`/api/upload`) | PDF is parsed server-side (text only — the binary is never stored). Text is truncated to ~150k chars, max 20 MB / 100 pages. |
-| Generate | One Gemini call returns a structured JSON study kit: summary notes (markdown), up to 30 flashcards, up to 15 quiz questions, up to 10 exam-likely questions — each with a `sourcePage`. |
+| Upload (`/api/upload`) | PDF is parsed server-side (text only — the binary is never stored). Text is truncated to ~80k chars, max 20 MB / 100 pages. |
+| Generate | Two parallel Gemini calls return the study kit (notes+flashcards, quiz+exam): summary notes (markdown), up to 30 flashcards, up to 15 quiz questions, up to 10 exam-likely questions — each with a `sourcePage`. |
 | Share | The document + kit are stored in Postgres under a short random slug. The user gets a link like `https://your-site.vercel.app/s/k7q2x9mz`. |
 | Study (`/s/[slug]`) | Tabs: Notes · Flashcards (flip, Know / Don't know, shuffle) · Quiz (instant feedback + score) · Exam Questions (reveal model answer) · Tutor (chat). |
 | Tutor (`/api/tutor`) | Answers only from the stored document text, with page citations. |
@@ -105,6 +105,6 @@ lib/
 
 ## Limits
 
-- PDF: max 20 MB, max 100 pages, text truncated to ~150k chars.
-- Kit: max 30 flashcards, 15 quiz questions, 10 exam questions.
+- PDF: max 20 MB, max 100 pages, text truncated to ~80k chars.
+- Kit: max 15 flashcards, 10 quiz questions, 6 exam questions.
 - Tutor context: document text truncated to ~120k chars, last 10 turns.
