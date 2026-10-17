@@ -13,7 +13,7 @@ export const maxDuration = 60;
 
 const MAX_BYTES = 20 * 1024 * 1024; // 20 MB
 const MAX_PAGES = 100;
-const MAX_CHARS = 150_000;
+const MAX_CHARS = 80_000;
 
 const LANGUAGES: StudyLanguage[] = ["english", "amharic", "auto"];
 
