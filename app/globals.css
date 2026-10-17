@@ -1,0 +1,174 @@
+:root {
+  --bg: #f6f7fb;
+  --card: #ffffff;
+  --ink: #141a2e;
+  --muted: #5b6378;
+  --line: #e3e6ef;
+  --brand: #4f46e5;
+  --brand-dark: #3d37c9;
+  --brand-soft: #eef0ff;
+  --green: #15803d;
+  --green-soft: #e8f7ee;
+  --red: #b91c1c;
+  --red-soft: #fdecec;
+  --amber-soft: #fff7e0;
+  --radius: 14px;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+}
+a { color: var(--brand); }
+button { font: inherit; cursor: pointer; }
+
+.container { max-width: 960px; margin: 0 auto; padding: 0 16px 48px; }
+
+/* ---------- Header / hero ---------- */
+.topbar {
+  display: flex; align-items: center; justify-content: space-between;
+  max-width: 960px; margin: 0 auto; padding: 18px 16px;
+}
+.logo { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; text-decoration: none; color: var(--ink); }
+.logo span { color: var(--brand); }
+.topbar a.pill { text-decoration: none; }
+
+.hero { text-align: center; padding: 28px 16px 8px; }
+.hero h1 { font-size: 2.1rem; line-height: 1.15; margin: 0 0 10px; letter-spacing: -0.02em; }
+.hero p { color: var(--muted); font-size: 1.05rem; max-width: 640px; margin: 0 auto; }
+.hero .sub { margin-top: 10px; font-size: 0.95rem; }
+
+.card {
+  background: var(--card); border: 1px solid var(--line);
+  border-radius: var(--radius); padding: 20px;
+  box-shadow: 0 2px 10px rgba(20, 26, 46, 0.04);
+}
+.section { margin-top: 22px; }
+
+/* ---------- Upload ---------- */
+.dropzone {
+  border: 2px dashed #c6cbee; border-radius: var(--radius);
+  background: var(--brand-soft); padding: 26px 16px; text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+.dropzone.drag { border-color: var(--brand); background: #e3e6ff; }
+.dropzone .big { font-weight: 700; font-size: 1.05rem; }
+.dropzone .small { color: var(--muted); font-size: 0.9rem; margin-top: 4px; }
+.file-row { margin-top: 10px; font-size: 0.95rem; }
+.field { margin-top: 14px; }
+.field label { display: block; font-weight: 600; font-size: 0.9rem; margin-bottom: 6px; }
+.field input[type="text"], .field select, .chat-input {
+  width: 100%; padding: 11px 12px; border: 1px solid var(--line);
+  border-radius: 10px; font: inherit; background: #fff;
+}
+.btn {
+  display: inline-block; background: var(--brand); color: #fff; border: 0;
+  padding: 12px 22px; border-radius: 10px; font-weight: 700; font-size: 1rem;
+}
+.btn:hover { background: var(--brand-dark); }
+.btn:disabled { opacity: 0.55; cursor: not-allowed; }
+.btn.secondary { background: #fff; color: var(--ink); border: 1px solid var(--line); }
+.btn.small { padding: 8px 14px; font-size: 0.9rem; }
+.btn.success { background: var(--green); }
+.alert { border-radius: 10px; padding: 12px 14px; font-size: 0.95rem; margin-top: 14px; }
+.alert.error { background: var(--red-soft); color: var(--red); border: 1px solid #f5c2c2; }
+.alert.info { background: var(--brand-soft); border: 1px solid #d6dbff; }
+.alert.ok { background: var(--green-soft); color: var(--green); border: 1px solid #bfe8cd; }
+.progress-steps { margin-top: 14px; font-size: 0.95rem; color: var(--muted); }
+.progress-steps .done { color: var(--green); font-weight: 600; }
+.result-box { margin-top: 16px; }
+.link-row { display: flex; gap: 8px; margin-top: 8px; }
+.link-row input { flex: 1; min-width: 0; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font: inherit; }
+
+/* ---------- How it works / features ---------- */
+.steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.step { text-align: center; }
+.step .num {
+  width: 40px; height: 40px; border-radius: 50%; background: var(--brand);
+  color: #fff; font-weight: 800; display: flex; align-items: center;
+  justify-content: center; margin: 0 auto 8px;
+}
+.step h3 { margin: 4px 0; font-size: 1rem; }
+.step p { color: var(--muted); font-size: 0.9rem; margin: 0; }
+.features { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.feature h3 { margin: 0 0 4px; font-size: 1rem; }
+.feature p { color: var(--muted); font-size: 0.9rem; margin: 0; }
+@media (max-width: 640px) {
+  .steps { grid-template-columns: 1fr; }
+  .features { grid-template-columns: 1fr; }
+  .hero h1 { font-size: 1.65rem; }
+}
+
+/* ---------- Study page ---------- */
+.doc-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: baseline; justify-content: space-between; }
+.doc-head h1 { margin: 0; font-size: 1.5rem; }
+.meta { color: var(--muted); font-size: 0.9rem; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 18px; }
+.tab {
+  border: 1px solid var(--line); background: #fff; border-radius: 999px;
+  padding: 8px 16px; font-weight: 600; font-size: 0.92rem;
+}
+.tab.active { background: var(--brand); color: #fff; border-color: var(--brand); }
+.tab-panel { margin-top: 16px; }
+.source { color: var(--muted); font-size: 0.82rem; }
+
+/* Notes (markdown-ish: we render plain text with line breaks) */
+.notes { white-space: pre-wrap; word-break: break-word; }
+.notes h1, .notes h2, .notes h3 { margin: 1em 0 0.4em; }
+
+/* Flashcards */
+.flash-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 14px; }
+.flash-progress { color: var(--muted); font-size: 0.92rem; }
+.flash-scene { perspective: 1000px; }
+.flash-card {
+  position: relative; width: 100%; min-height: 220px; cursor: pointer;
+  transform-style: preserve-3d; transition: transform 0.45s;
+}
+.flash-card.flipped { transform: rotateY(180deg); }
+.flash-face {
+  position: absolute; inset: 0; backface-visibility: hidden;
+  background: #fff; border: 1px solid var(--line); border-radius: var(--radius);
+  padding: 24px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center;
+}
+.flash-face.back { transform: rotateY(180deg); background: var(--brand-soft); }
+.flash-face .label { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 10px; }
+.flash-face .text { font-size: 1.2rem; font-weight: 600; }
+.flash-spacer { min-height: 220px; }
+.flash-actions { display: flex; gap: 10px; justify-content: center; margin-top: 14px; }
+
+/* Quiz */
+.quiz-q { font-size: 1.1rem; font-weight: 650; }
+.opt {
+  display: block; width: 100%; text-align: left; background: #fff;
+  border: 1px solid var(--line); border-radius: 10px;
+  padding: 11px 13px; margin-top: 9px; font-size: 0.98rem;
+}
+.opt.selected { border-color: var(--brand); background: var(--brand-soft); }
+.opt.correct { border-color: var(--green); background: var(--green-soft); }
+.opt.wrong { border-color: var(--red); background: var(--red-soft); }
+.explain { margin-top: 12px; background: var(--amber-soft); border-radius: 10px; padding: 11px 13px; font-size: 0.94rem; }
+.score-box { text-align: center; padding: 26px 12px; }
+.score-box .big { font-size: 2rem; font-weight: 800; }
+
+/* Exam questions */
+.exam-item { border-top: 1px solid var(--line); padding: 14px 0; }
+.exam-item:first-child { border-top: 0; }
+.exam-item .q { font-weight: 650; }
+.exam-item .topic { display: inline-block; background: var(--brand-soft); border-radius: 999px; padding: 2px 10px; font-size: 0.8rem; margin-left: 8px; }
+.model-answer { margin-top: 10px; background: var(--green-soft); border-radius: 10px; padding: 11px 13px; white-space: pre-wrap; }
+
+/* Tutor chat */
+.chat-log { max-height: 420px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; margin-bottom: 12px; }
+.msg { max-width: 85%; padding: 10px 13px; border-radius: 12px; font-size: 0.95rem; white-space: pre-wrap; }
+.msg.user { align-self: flex-end; background: var(--brand); color: #fff; }
+.msg.model { align-self: flex-start; background: #fff; border: 1px solid var(--line); }
+.chat-form { display: flex; gap: 8px; }
+.chat-form .chat-input { flex: 1; }
+.chat-note { color: var(--muted); font-size: 0.85rem; margin-top: 8px; }
+.empty { text-align: center; color: var(--muted); padding: 30px 10px; }
+.footer { text-align: center; color: var(--muted); font-size: 0.85rem; padding: 24px 0 8px; }
