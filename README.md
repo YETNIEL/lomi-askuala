@@ -32,7 +32,7 @@ in-memory — resets on redeploy, per instance).
 3. Click **Get API key** → **Create API key** (free tier — no card needed).
 4. Copy the key. You will paste it into Vercel as `GEMINI_API_KEY`.
 
-The default model is `gemini-2.0-flash`. Override it with `GEMINI_MODEL`
+The default model is `gemini-3.8-flash`. Override it with `GEMINI_MODEL`
 if you want a different Gemini model.
 
 ## Local development
@@ -74,7 +74,7 @@ CREATE INDEX IF NOT EXISTS documents_slug_idx ON documents (slug);
    (this auto-adds the `POSTGRES_*` variables).
 4. **Settings → Environment Variables** → add:
    - `GEMINI_API_KEY` = your key from Google AI Studio
-   - `GEMINI_MODEL` = `gemini-2.0-flash` (optional — this is the default)
+   - `GEMINI_MODEL` = `gemini-3.8-flash` (optional — this is the default)
 5. **Deploy.** Open the deployed URL and upload a test PDF.
 6. If uploads fail with *"AI is not configured"*, the `GEMINI_API_KEY`
    variable is missing — add it and redeploy.
