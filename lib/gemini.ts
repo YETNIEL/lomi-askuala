@@ -3,7 +3,7 @@ import type { StudyKit, StudyLanguage } from "./types";
 // Gemini via plain REST fetch (no SDK needed).
 // Key comes ONLY from GEMINI_API_KEY. No key is ever bundled in code.
 
-const DEFAULT_MODEL = "gemini-2.0-flash";
+const DEFAULT_MODEL = "gemini-3.8-flash";
 
 export function geminiConfigured(): boolean {
   return Boolean(process.env.GEMINI_API_KEY);
