@@ -63,7 +63,7 @@ export default function UploadForm() {
     } catch {
       clearTimeout(generatingTimer);
       setPhase("error");
-      setError("Network error. Please check your connection and try again.");
+      setError("The server took too long to build your kit. Try a smaller PDF, or try again.");
     }
   }
 
