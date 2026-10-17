@@ -77,15 +77,22 @@ GROUNDING RULES — FOLLOW THEM STRICTLY:
 5. If a fact is ambiguous in the document, say it is ambiguous or omit it.
 `;
 
-const KIT_SCHEMA_HINT = `
+const NOTES_FLASHCARDS_HINT = `
 Return ONLY a JSON object with exactly this shape (no markdown fences, no extra text):
 {
   "summaryNotes": "markdown string: organized notes covering the document's key ideas, with section headings",
-  "flashcards": [ { "question": "...", "answer": "...", "sourcePage": 1 } ],
+  "flashcards": [ { "question": "...", "answer": "...", "sourcePage": 1 } ]
+}
+Limits: at most 15 flashcards.
+`;
+
+const QUIZ_EXAM_HINT = `
+Return ONLY a JSON object with exactly this shape (no markdown fences, no extra text):
+{
   "quiz": [ { "question": "...", "options": ["...", "...", "...", "..."], "correctIndex": 0, "explanation": "...", "sourcePage": 1 } ],
   "examQuestions": [ { "question": "...", "modelAnswer": "...", "topic": "...", "sourcePage": 1 } ]
 }
-Limits: at most 30 flashcards, at most 15 quiz questions, at most 10 exam questions.
+Limits: at most 10 quiz questions, at most 6 exam questions.
 Quiz "options" must have exactly 4 entries and "correctIndex" must be 0-3.
 `;
 
@@ -99,15 +106,120 @@ function languageInstruction(language: StudyLanguage): string {
   return "Write ALL generated content in the same language as the document (follow the document's language).";
 }
 
+function parseKitJson(raw: string): Record<string, unknown> {
+  // Strip markdown fences if the model adds them despite JSON mode.
+  const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
+  try {
+    const parsed: unknown = JSON.parse(cleaned);
+    if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    // fall through to the throw below
+  }
+  throw new Error("AI returned invalid JSON for the study kit.");
+}
+
+function normalizeFlashcards(input: unknown): StudyKit["flashcards"] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter(
+      (f): f is StudyKit["flashcards"][number] =>
+        !!f &&
+        typeof (f as { question?: unknown }).question === "string" &&
+        typeof (f as { answer?: unknown }).answer === "string",
+    )
+    .slice(0, 15)
+    .map((f) => {
+      const item = f as { question: string; answer: string; sourcePage?: unknown };
+      return {
+        question: item.question,
+        answer: item.answer,
+        sourcePage:
+          typeof item.sourcePage === "number" && item.sourcePage > 0
+            ? Math.round(item.sourcePage)
+            : 1,
+      };
+    });
+}
+
+function normalizeQuiz(input: unknown): StudyKit["quiz"] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter(
+      (q): q is StudyKit["quiz"][number] =>
+        !!q &&
+        typeof (q as { question?: unknown }).question === "string" &&
+        Array.isArray((q as { options?: unknown }).options) &&
+        (q as { options: unknown[] }).options.length === 4 &&
+        typeof (q as { correctIndex?: unknown }).correctIndex === "number" &&
+        (q as { correctIndex: number }).correctIndex >= 0 &&
+        (q as { correctIndex: number }).correctIndex <= 3,
+    )
+    .slice(0, 10)
+    .map((q) => {
+      const item = q as {
+        question: string;
+        options: unknown[];
+        correctIndex: number;
+        explanation?: unknown;
+        sourcePage?: unknown;
+      };
+      return {
+        question: item.question,
+        options: item.options.map(String),
+        correctIndex: item.correctIndex,
+        explanation: typeof item.explanation === "string" ? item.explanation : "",
+        sourcePage:
+          typeof item.sourcePage === "number" && item.sourcePage > 0
+            ? Math.round(item.sourcePage)
+            : 1,
+      };
+    });
+}
+
+function normalizeExamQuestions(input: unknown): StudyKit["examQuestions"] {
+  if (!Array.isArray(input)) return [];
+  return input
+    .filter(
+      (q): q is StudyKit["examQuestions"][number] =>
+        !!q &&
+        typeof (q as { question?: unknown }).question === "string" &&
+        typeof (q as { modelAnswer?: unknown }).modelAnswer === "string",
+    )
+    .slice(0, 6)
+    .map((q) => {
+      const item = q as {
+        question: string;
+        modelAnswer: string;
+        topic?: unknown;
+        sourcePage?: unknown;
+      };
+      return {
+        question: item.question,
+        modelAnswer: item.modelAnswer,
+        topic: typeof item.topic === "string" ? item.topic : "General",
+        sourcePage:
+          typeof item.sourcePage === "number" && item.sourcePage > 0
+            ? Math.round(item.sourcePage)
+            : 1,
+      };
+    });
+}
+
 export async function generateStudyKit(
   documentText: string,
   language: StudyLanguage,
 ): Promise<StudyKit> {
-  const prompt = `
-You are a study assistant. From the document text below, build a study kit.
+  const lang = languageInstruction(language);
+  // Two parallel calls, each producing a smaller JSON payload. Wall-clock
+  // time is roughly the slower call, not the sum — this keeps generation
+  // inside Vercel's 60s function limit on the Hobby plan.
+  const notesPrompt = `
+You are a study assistant. From the document text below, build study notes + flashcards.
 ${GROUNDING_RULES}
-${languageInstruction(language)}
-${KIT_SCHEMA_HINT}
+${lang}
+${NOTES_FLASHCARDS_HINT}
 
 DOCUMENT TEXT (page numbers are approximate, based on extraction order;
 use your best estimate of the page each fact came from):
@@ -115,79 +227,30 @@ use your best estimate of the page each fact came from):
 ${documentText}
 ---
 `;
-  const raw = await callGemini(
-    [{ role: "user", parts: [{ text: prompt }] }],
-    true,
-  );
-  // Strip markdown fences if the model adds them despite JSON mode.
-  const cleaned = raw.replace(/^```(?:json)?\s*/i, "").replace(/```\s*$/, "");
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cleaned);
-  } catch {
-    throw new Error("AI returned invalid JSON for the study kit.");
-  }
-  const kit = parsed as Partial<StudyKit>;
-  // Defensive normalization + caps, so a sloppy response can't break the UI.
+  const quizPrompt = `
+You are a study assistant. From the document text below, build a quiz + exam-likely questions.
+${GROUNDING_RULES}
+${lang}
+${QUIZ_EXAM_HINT}
+
+DOCUMENT TEXT (page numbers are approximate, based on extraction order;
+use your best estimate of the page each fact came from):
+---
+${documentText}
+---
+`;
+  const [rawNotes, rawQuiz] = await Promise.all([
+    callGemini([{ role: "user", parts: [{ text: notesPrompt }] }], true),
+    callGemini([{ role: "user", parts: [{ text: quizPrompt }] }], true),
+  ]);
+  const parsedNotes = parseKitJson(rawNotes);
+  const parsedQuiz = parseKitJson(rawQuiz);
   return {
-    summaryNotes: typeof kit.summaryNotes === "string" ? kit.summaryNotes : "",
-    flashcards: Array.isArray(kit.flashcards)
-      ? kit.flashcards
-          .filter(
-            (f): f is StudyKit["flashcards"][number] =>
-              !!f && typeof f.question === "string" && typeof f.answer === "string",
-          )
-          .slice(0, 30)
-          .map((f) => ({
-            question: f.question,
-            answer: f.answer,
-            sourcePage:
-              typeof f.sourcePage === "number" && f.sourcePage > 0
-                ? Math.round(f.sourcePage)
-                : 1,
-          }))
-      : [],
-    quiz: Array.isArray(kit.quiz)
-      ? kit.quiz
-          .filter(
-            (q): q is StudyKit["quiz"][number] =>
-              !!q &&
-              typeof q.question === "string" &&
-              Array.isArray(q.options) &&
-              q.options.length === 4 &&
-              typeof q.correctIndex === "number" &&
-              q.correctIndex >= 0 &&
-              q.correctIndex <= 3,
-          )
-          .slice(0, 15)
-          .map((q) => ({
-            question: q.question,
-            options: q.options.map(String),
-            correctIndex: q.correctIndex,
-            explanation: typeof q.explanation === "string" ? q.explanation : "",
-            sourcePage:
-              typeof q.sourcePage === "number" && q.sourcePage > 0
-                ? Math.round(q.sourcePage)
-                : 1,
-          }))
-      : [],
-    examQuestions: Array.isArray(kit.examQuestions)
-      ? kit.examQuestions
-          .filter(
-            (q): q is StudyKit["examQuestions"][number] =>
-              !!q && typeof q.question === "string" && typeof q.modelAnswer === "string",
-          )
-          .slice(0, 10)
-          .map((q) => ({
-            question: q.question,
-            modelAnswer: q.modelAnswer,
-            topic: typeof q.topic === "string" ? q.topic : "General",
-            sourcePage:
-              typeof q.sourcePage === "number" && q.sourcePage > 0
-                ? Math.round(q.sourcePage)
-                : 1,
-          }))
-      : [],
+    summaryNotes:
+      typeof parsedNotes.summaryNotes === "string" ? parsedNotes.summaryNotes : "",
+    flashcards: normalizeFlashcards(parsedNotes.flashcards),
+    quiz: normalizeQuiz(parsedQuiz.quiz),
+    examQuestions: normalizeExamQuestions(parsedQuiz.examQuestions),
   };
 }
 
