@@ -40,7 +40,16 @@ async function callGemini(
       contents,
       generationConfig: {
         temperature: 0.2, // low temperature: factual, grounded output
-        ...(jsonMode ? { responseMimeType: "application/json" } : {}),
+        ...(jsonMode
+          ? {
+              responseMimeType: "application/json",
+              // No extended reasoning for extraction-style JSON calls:
+              // Gemini 3's default thinking can take tens of seconds and
+              // blow Vercel's 60s function limit. These calls only
+              // reformat document text, so thinking is unnecessary.
+              thinkingConfig: { thinkingBudget: 0 },
+            }
+          : {}),
       },
     }),
   });
