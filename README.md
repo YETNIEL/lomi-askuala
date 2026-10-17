@@ -1,4 +1,4 @@
-# StudyKit AI
+# Lomi Askuala
 
 A public AI-based study website. Anyone uploads a PDF, gets a unique
 shareable link, and opening that link shows **notes, flashcards, a quiz,
